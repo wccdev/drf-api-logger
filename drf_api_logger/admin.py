@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.utils import timezone
 from django.conf import settings
 from django.contrib import admin, messages
 from django.db.models import Count
@@ -106,7 +107,8 @@ if database_log_enabled():
 
         @admin.display(description="Added on", ordering='added_on')
         def added_on_time(self, obj):
-            return (obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA)).strftime("%Y-%m-%d %H:%M:%S")
+            localtime = timezone.localtime(obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA))
+            return localtime.strftime("%Y-%m-%d %H:%M:%S")
 
         @admin.display(description="headers")
         def get_headers(self, instance):
