@@ -1,5 +1,10 @@
+import json
 import re
 from django.conf import settings
+from django.utils.safestring import mark_safe
+from pygments import highlight
+from pygments.formatters.html import HtmlFormatter
+from pygments.lexers.data import JsonLexer
 
 SENSITIVE_KEYS = ['password', 'token', 'access', 'refresh']
 if hasattr(settings, 'DRF_API_LOGGER_EXCLUDE_KEYS'):
@@ -74,3 +79,19 @@ def get_result_code(request_body, key):
         return request_body.get(key)
     except AttributeError:
         pass
+
+
+def pretty_json(data: dict):
+    """Function to display pretty version of our data"""
+    # Convert the data to sorted, indented JSON
+    response = json.dumps(data, sort_keys=True, indent=2)  # <-- your field here
+    # Truncate the data. Alter as needed
+    response = response[:5000]
+    # Get the Pygments formatter
+    formatter = HtmlFormatter(style='colorful')
+    # Highlight the data
+    response = highlight(response, JsonLexer(), formatter)
+    # Get the stylesheet
+    style = "<style>" + formatter.get_style_defs() + "</style><br>"
+    # Safe the output
+    return mark_safe(style + response)

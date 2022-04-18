@@ -7,8 +7,7 @@ from django.http import HttpResponse
 
 from rest_framework.test import APIClient
 
-from drf_api_logger.utils import database_log_enabled
-
+from drf_api_logger.utils import database_log_enabled, pretty_json
 
 if database_log_enabled():
     from drf_api_logger.models import APILogsModel
@@ -79,7 +78,20 @@ if database_log_enabled():
             return queryset
 
     class APILogsAdmin(admin.ModelAdmin, ExportCsvMixin):
+        list_per_page = 20
+        list_display = ('id', 'api', 'method', 'result_code', 'request_user', 'execution_time', 'added_on_time',)
+        list_filter = ('added_on', 'result_code', 'method',)
+        search_fields = ('body', 'response', 'headers', 'api',)
+        readonly_fields = (
+            'execution_time', 'client_ip_address', 'api',
+            'get_headers', 'body', 'method', 'get_response',
+            'result_code', 'request_user', 'added_on_time',
+        )
+        exclude = ('added_on', 'headers', 'response')
 
+        change_list_template = 'charts_change_list.html'
+        change_form_template = 'change_form.html'
+        date_hierarchy = 'added_on'
         actions = ["retry", "export_as_csv"]
 
         def __init__(self, model, admin_site):
@@ -93,25 +105,24 @@ if database_log_enabled():
                     self._DRF_API_LOGGER_TIMEDELTA = settings.DRF_API_LOGGER_TIMEDELTA
 
         def added_on_time(self, obj):
-            return (obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA)).strftime("%d %b %Y %H:%M:%S")
+            return obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA)
 
         added_on_time.admin_order_field = 'added_on'
         added_on_time.short_description = 'Added on'
 
-        list_per_page = 20
-        list_display = ('id', 'api', 'method', 'result_code', 'request_user', 'execution_time', 'added_on_time',)
-        list_filter = ('added_on', 'result_code', 'method',)
-        search_fields = ('body', 'response', 'headers', 'api',)
-        readonly_fields = (
-            'execution_time', 'client_ip_address', 'api',
-            'headers', 'body', 'method', 'response',
-            'result_code', 'request_user', 'added_on_time',
-        )
-        exclude = ('added_on',)
+        @admin.display(short_description="headers")
+        def get_headers(self, instance):
+            """Function to display pretty version of our data"""
+            return pretty_json(instance.headers)
 
-        change_list_template = 'charts_change_list.html'
-        change_form_template = 'change_form.html'
-        date_hierarchy = 'added_on'
+        # def get_body(self, instance):
+        #     """Function to display pretty version of our data"""
+        #     return pretty_json(instance.body)
+
+        @admin.display(short_description="response")
+        def get_response(self, instance):
+            """Function to display pretty version of our data"""
+            return pretty_json(instance.response)
 
         def changelist_view(self, request, extra_context=None):
             response = super(APILogsAdmin, self).changelist_view(request, extra_context)
