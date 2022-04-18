@@ -41,7 +41,7 @@ def is_api_logger_enabled():
 
 
 def database_log_enabled():
-    drf_api_logger_database = False
+    drf_api_logger_database = True
     if hasattr(settings, 'DRF_API_LOGGER_DATABASE'):
         drf_api_logger_database = settings.DRF_API_LOGGER_DATABASE
     return drf_api_logger_database
