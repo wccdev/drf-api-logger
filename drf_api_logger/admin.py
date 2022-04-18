@@ -1,11 +1,14 @@
 from datetime import timedelta
 
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Count
 from django.http import HttpResponse
 
+from rest_framework.test import APIClient
+
 from drf_api_logger.utils import database_log_enabled
+
 
 if database_log_enabled():
     from drf_api_logger.models import APILogsModel
@@ -77,7 +80,7 @@ if database_log_enabled():
 
     class APILogsAdmin(admin.ModelAdmin, ExportCsvMixin):
 
-        actions = ["export_as_csv"]
+        actions = ["retry", "export_as_csv"]
 
         def __init__(self, model, admin_site):
             super().__init__(model, admin_site)
@@ -96,12 +99,13 @@ if database_log_enabled():
         added_on_time.short_description = 'Added on'
 
         list_per_page = 20
-        list_display = ('id', 'api', 'method', 'status_code', 'execution_time', 'added_on_time',)
-        list_filter = ('added_on', 'status_code', 'method',)
+        list_display = ('id', 'api', 'method', 'result_code', 'request_user', 'execution_time', 'added_on_time',)
+        list_filter = ('added_on', 'result_code', 'method',)
         search_fields = ('body', 'response', 'headers', 'api',)
         readonly_fields = (
             'execution_time', 'client_ip_address', 'api',
-            'headers', 'body', 'method', 'response', 'status_code', 'added_on_time',
+            'headers', 'body', 'method', 'response',
+            'result_code', 'request_user', 'added_on_time',
         )
         exclude = ('added_on',)
 
@@ -116,12 +120,12 @@ if database_log_enabled():
             except:
                 return response
             analytics_model = filtered_query_set.values('added_on__date').annotate(total=Count('id')).order_by('total')
-            status_code_count_mode = filtered_query_set.values('id').values('status_code').annotate(
-                total=Count('id')).order_by('status_code')
+            status_code_count_mode = filtered_query_set.values('id').values('result_code').annotate(
+                total=Count('id')).order_by('result_code')
             status_code_count_keys = list()
             status_code_count_values = list()
             for item in status_code_count_mode:
-                status_code_count_keys.append(item.get('status_code'))
+                status_code_count_keys.append(item.get('result_code'))
                 status_code_count_values.append(item.get('total'))
             extra_context = dict(
                 analytics=analytics_model,
@@ -151,6 +155,32 @@ if database_log_enabled():
 
         def has_change_permission(self, request, obj=None):
             return False
+
+        def retry(self, request, queryset):
+            """
+            Perform retry
+            """
+            if hasattr(settings, "DRF_API_LOGGER_RETRY_AUTH_TOKEN"):
+                self.message_user(
+                    request,
+                    "You must set 'DRF_API_LOGGER_RETRY_AUTH_TOKEN' in django settings before making a retry request.",
+                    level=messages.ERROR
+                )
+                return
+
+            if len(queryset) > 1:
+                self.message_user(request, "You cannot retry in batch!", level=messages.ERROR)
+                return
+
+            api_log = queryset[0]
+            client = APIClient()
+            client.force_authenticate(token=settings.DRF_API_LOGGER_RETRY_AUTH_TOKEN)
+            client.request(
+                api_log.method,
+                api_log.api,
+                data=self.body,
+                format='json',
+            )
 
 
     admin.site.register(APILogsModel, APILogsAdmin)

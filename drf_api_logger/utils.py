@@ -67,3 +67,10 @@ def mask_sensitive_data(data):
             data[key] = [mask_sensitive_data(item) for item in data[key]]
 
     return data
+
+
+def get_result_code(request_body, key):
+    try:
+        return request_body.get(key)
+    except AttributeError:
+        pass

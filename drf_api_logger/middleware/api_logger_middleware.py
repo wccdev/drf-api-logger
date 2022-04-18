@@ -1,13 +1,12 @@
 import json
 import time
-import bleach
 from django.conf import settings
 from django.urls import resolve
 from django.utils import timezone
 
 from drf_api_logger import API_LOGGER_SIGNAL
 from drf_api_logger.start_logger_when_server_starts import LOGGER_THREAD
-from drf_api_logger.utils import get_headers, get_client_ip, mask_sensitive_data
+from drf_api_logger.utils import get_headers, get_client_ip, mask_sensitive_data, get_result_code
 
 """
 File: api_logger_middleware.py
@@ -50,6 +49,10 @@ class APILoggerMiddleware:
             if type(settings.DRF_API_LOGGER_METHODS) is tuple or type(
                     settings.DRF_API_LOGGER_METHODS) is list:
                 self.DRF_API_LOGGER_METHODS = settings.DRF_API_LOGGER_METHODS
+
+        self.DRF_API_LOGGER_RESULT_CODE_KEY = 'ret'
+        if hasattr(settings, 'DRF_API_LOGGER_RESULT_CODE_KEY'):
+            self.DRF_API_LOGGER_RESULT_CODE_KEY = settings.DRF_API_LOGGER_RESULT_CODE_KEY
 
     def __call__(self, request):
 
@@ -117,6 +120,8 @@ class APILoggerMiddleware:
                     client_ip_address=get_client_ip(request),
                     response=mask_sensitive_data(response_body),
                     status_code=response.status_code,
+                    result_code=get_result_code(response_body, self.DRF_API_LOGGER_RESULT_CODE_KEY),
+                    request_user=request.user if not request.user.is_anonymous else None,
                     execution_time=time.time() - start_time,
                     added_on=timezone.now()
                 )
