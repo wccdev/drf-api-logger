@@ -31,7 +31,7 @@ if database_log_enabled():
         response = models.TextField()
         status_code = models.PositiveSmallIntegerField(help_text='Response status code', db_index=True)
         result_code = models.PositiveSmallIntegerField(help_text='Result code', null=True, db_index=True)
-        request_user = models.ForeignKey(settings.AUTH_USER, null=True, on_delete=models.CASCADE, help_text="Request User")
+        request_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE, help_text="Request User")
         retry_times = models.IntegerField(default=0)
         execution_time = models.DecimalField(decimal_places=5, max_digits=8,
                                              help_text='Server execution time (Not complete response time.)')
