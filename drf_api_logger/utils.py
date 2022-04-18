@@ -84,7 +84,7 @@ def get_result_code(request_body, key):
 def pretty_json(data: dict):
     """Function to display pretty version of our data"""
     # Convert the data to sorted, indented JSON
-    response = json.dumps(data, sort_keys=True, indent=2)  # <-- your field here
+    response = json.dumps(data, sort_keys=True, ensure_ascii=False, indent=2)  # <-- your field here
     # Truncate the data. Alter as needed
     response = response[:5000]
     # Get the Pygments formatter

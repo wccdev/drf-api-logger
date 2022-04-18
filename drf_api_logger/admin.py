@@ -84,10 +84,10 @@ if database_log_enabled():
         search_fields = ('body', 'response', 'headers', 'api',)
         readonly_fields = (
             'execution_time', 'client_ip_address', 'api',
-            'get_headers', 'body', 'method', 'get_response',
+            'get_headers', 'get_body', 'method', 'get_response',
             'result_code', 'request_user', 'added_on_time',
         )
-        exclude = ('added_on', 'headers', 'response')
+        exclude = ('added_on', 'headers', 'response', 'body')
 
         change_list_template = 'charts_change_list.html'
         change_form_template = 'change_form.html'
@@ -115,9 +115,11 @@ if database_log_enabled():
             """Function to display pretty version of our data"""
             return pretty_json(instance.headers)
 
-        # def get_body(self, instance):
-        #     """Function to display pretty version of our data"""
-        #     return pretty_json(instance.body)
+        @admin.display(description="body")
+        def get_body(self, instance):
+            """Function to display pretty version of our data"""
+            if instance.body:
+                return pretty_json(instance.body)
 
         @admin.display(description="response")
         def get_response(self, instance):
