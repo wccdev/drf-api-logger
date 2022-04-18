@@ -83,9 +83,9 @@ if database_log_enabled():
         list_filter = ('added_on', 'result_code', 'method',)
         search_fields = ('body', 'response', 'headers', 'api',)
         readonly_fields = (
-            'execution_time', 'client_ip_address', 'api',
+            'api', 'request_user', 'execution_time', 'client_ip_address',
             'get_headers', 'get_body', 'method', 'get_response',
-            'result_code', 'request_user', 'added_on_time',
+            'result_code', 'added_on_time',
         )
         exclude = ('added_on', 'headers', 'response', 'body')
 
@@ -104,11 +104,9 @@ if database_log_enabled():
                 if type(settings.DRF_API_LOGGER_TIMEDELTA) == int:  # Making sure for integer value.
                     self._DRF_API_LOGGER_TIMEDELTA = settings.DRF_API_LOGGER_TIMEDELTA
 
+        @admin.display(description="Added on", ordering='added_on')
         def added_on_time(self, obj):
-            return obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA)
-
-        added_on_time.admin_order_field = 'added_on'
-        added_on_time.short_description = 'Added on'
+            return (obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA)).strftime("%Y-%m-%d %H:%M:%S")
 
         @admin.display(description="headers")
         def get_headers(self, instance):
