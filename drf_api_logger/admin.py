@@ -110,7 +110,7 @@ if database_log_enabled():
         added_on_time.admin_order_field = 'added_on'
         added_on_time.short_description = 'Added on'
 
-        @admin.display(short_description="headers")
+        @admin.display(description="headers")
         def get_headers(self, instance):
             """Function to display pretty version of our data"""
             return pretty_json(instance.headers)
@@ -119,7 +119,7 @@ if database_log_enabled():
         #     """Function to display pretty version of our data"""
         #     return pretty_json(instance.body)
 
-        @admin.display(short_description="response")
+        @admin.display(description="response")
         def get_response(self, instance):
             """Function to display pretty version of our data"""
             return pretty_json(instance.response)
