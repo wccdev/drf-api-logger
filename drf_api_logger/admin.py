@@ -160,7 +160,7 @@ if database_log_enabled():
             """
             Perform retry
             """
-            if hasattr(settings, "DRF_API_LOGGER_RETRY_AUTH_TOKEN"):
+            if not hasattr(settings, "DRF_API_LOGGER_RETRY_AUTH_TOKEN"):
                 self.message_user(
                     request,
                     "You must set 'DRF_API_LOGGER_RETRY_AUTH_TOKEN' in django settings before making a retry request.",
