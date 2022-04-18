@@ -115,7 +115,7 @@ if database_log_enabled():
             """Function to display pretty version of our data"""
             return pretty_json(instance.headers)
 
-        @admin.display(description="body")
+        @admin.display(description="body", empty_value="")
         def get_body(self, instance):
             """Function to display pretty version of our data"""
             if instance.body:
