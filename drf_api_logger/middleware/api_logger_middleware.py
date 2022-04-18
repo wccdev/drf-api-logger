@@ -120,7 +120,7 @@ class APILoggerMiddleware:
                     client_ip_address=get_client_ip(request),
                     response=mask_sensitive_data(response_body),
                     status_code=response.status_code,
-                    result_code=get_result_code(response_body, self.DRF_API_LOGGER_RESULT_CODE_KEY),
+                    result_code=get_result_code(response_body, self.DRF_API_LOGGER_RESULT_CODE_KEY) or response.status_code,
                     request_user=request.user if not request.user.is_anonymous else None,
                     execution_time=time.time() - start_time,
                     added_on=timezone.now()
