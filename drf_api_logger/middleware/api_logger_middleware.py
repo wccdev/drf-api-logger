@@ -99,8 +99,8 @@ class APILoggerMiddleware:
                 if getattr(response, 'streaming', False):
                     response_body = '** Streaming **'
                 else:
-                    if hasattr(response, "data"):
-                        response_body = response.data
+                    if hasattr(response, "_rendered_data"):
+                        response_body = response._rendered_data  # get cached data if it exists.
                     elif type(response.content) == bytes:
                         response_body = json.loads(response.content.decode())
                     else:
