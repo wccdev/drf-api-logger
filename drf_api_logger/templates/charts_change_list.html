@@ -4,8 +4,9 @@
 <!-- Override extrahead to add Chart.js -->
 {% block extrahead %}
 {{ block.super }}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@^3"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 <script>
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Render the chart
   const chart = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
       datasets: [
         {
@@ -37,27 +38,28 @@ document.addEventListener('DOMContentLoaded', () => {
     options: {
       responsive: true,
       scales: {
-        xAxes: [
-          {
+        x: {
             type: 'time',
+            display: true,
             time: {
               unit: 'day',
               round: 'day',
-              tooltipFormat:'DD/MM/YYYY',
+              tooltipFormat:'YYYY/MM/DD',
               displayFormats: {
-                day: 'MMM D',
+                day: 'MMM DD',
               },
             },
-          },
-        ],
-        yAxes: [
-          {
+        },
+        y: {
+            min: 0,
+            beginAtZero: true,
             ticks: {
-              beginAtZero: true,
-            },
-          },
-        ],
-      },
+              // forces step size to be 50 units
+              // stepSize: 50,
+              precision: 0
+            }
+        }
+        }
     },
   });
 
@@ -87,6 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
               title: {
                   display: true,
                   text: 'API calls by status code'
+              },
+              scales: {
+                  y: {
+                      min: 0,
+                      beginAtZero: true,
+                      ticks: {
+                        // forces step size to be 50 units
+                        // stepSize: 50,
+                        precision: 0
+                      }
+                  }
               }
           }
       });
