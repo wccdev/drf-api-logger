@@ -84,7 +84,7 @@ if database_log_enabled():
         list_filter = ('added_on', 'result_code', 'method',)
         search_fields = ('request_id', 'body', 'response', 'api',)
         readonly_fields = (
-            'api', 'get_request_user', 'get_user_agent', 'get_execution_time', 'ip_location2',
+            'api', 'get_request_user', 'location', 'get_user_agent', 'get_execution_time',
             'get_headers', 'get_body', 'method', 'get_response',
             'result_code', 'added_on_time',
         )

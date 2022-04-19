@@ -44,7 +44,7 @@ if database_log_enabled():
             return self.api
 
         @property
-        def ip_location(self):
+        def location2(self):
             api_url = "https://restapi.amap.com/v3/ip"
             if self.client_ip_address in ("localhost", "127.0.0.1", "0.0.0.0"):
                 return self.client_ip_address
@@ -65,7 +65,7 @@ if database_log_enabled():
             return f"{self.client_ip_address} {province}{city}"
 
         @property
-        def ip_location2(self):
+        def location(self):
             api_url = "https://sp1.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php"
             if self.client_ip_address in ("localhost", "127.0.0.1", "0.0.0.0"):
                 return self.client_ip_address
