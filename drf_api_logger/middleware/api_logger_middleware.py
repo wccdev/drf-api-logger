@@ -75,10 +75,10 @@ class APILoggerMiddleware:
                 return self.get_response(request)
 
             start_time = time.time()
-            request_data = ''
+            request_data = None
             try:
-                request_data = json.loads(request.body) if request.body else ''
-            except:
+                request_data = json.loads(request.body)
+            except json.JSONDecodeError:
                 pass
 
             # Code to be executed for each request before
