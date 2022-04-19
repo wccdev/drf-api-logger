@@ -92,6 +92,6 @@ def pretty_json(data: dict):
     # Highlight the data
     response = highlight(response, JsonLexer(), formatter)
     # Get the stylesheet
-    style = "<style>" + formatter.get_style_defs() + "</style><br>"
+    style = "<style>" + formatter.get_style_defs() + "</style>"
     # Safe the output
     return mark_safe(style + response)
