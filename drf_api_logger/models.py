@@ -12,12 +12,12 @@ if database_log_enabled():
     Load models only if DRF_API_LOGGER_DATABASE is True
     """
     class BaseModel(models.Model):
-        id = models.BigAutoField(primary_key=True)
+        request_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
         added_on = models.DateTimeField()
 
         def __str__(self):
-            return str(self.id)
+            return self.request_id
 
         class Meta:
             abstract = True
@@ -25,7 +25,6 @@ if database_log_enabled():
 
 
     class APILogsModel(BaseModel):
-        request_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
         api = models.CharField(max_length=1024, help_text='API URL')
         headers = models.JSONField()
         body = models.JSONField()
