@@ -105,26 +105,30 @@ if database_log_enabled():
                 if type(settings.DRF_API_LOGGER_TIMEDELTA) == int:  # Making sure for integer value.
                     self._DRF_API_LOGGER_TIMEDELTA = settings.DRF_API_LOGGER_TIMEDELTA
 
-        @admin.display(description="Added on", ordering='added_on')
+        @admin.display(description="added on", ordering='added_on')
         def added_on_time(self, obj):
             localtime = timezone.localtime(obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA))
             return localtime.strftime("%Y-%m-%d %H:%M:%S")
 
+        @admin.display(description="user agent")
+        def get_user_agent(self, obj):
+            return str(obj.user_agent)
+
         @admin.display(description="headers")
-        def get_headers(self, instance):
+        def get_headers(self, obj):
             """Function to display pretty version of our data"""
-            return pretty_json(instance.headers)
+            return pretty_json(obj.headers)
 
         @admin.display(description="body", empty_value="")
-        def get_body(self, instance):
+        def get_body(self, obj):
             """Function to display pretty version of our data"""
-            if instance.body:
-                return pretty_json(instance.body)
+            if obj.body:
+                return pretty_json(obj.body)
 
         @admin.display(description="response")
-        def get_response(self, instance):
+        def get_response(self, obj):
             """Function to display pretty version of our data"""
-            return pretty_json(instance.response)
+            return pretty_json(obj.response)
 
         def changelist_view(self, request, extra_context=None):
             response = super(APILogsAdmin, self).changelist_view(request, extra_context)

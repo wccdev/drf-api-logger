@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils.functional import cached_property
 from user_agents import parse
 
 from drf_api_logger.utils import database_log_enabled
@@ -41,14 +42,21 @@ if database_log_enabled():
         def __str__(self):
             return self.api
 
-        @property
-        def browser(self):
+        @cached_property
+        def user_agent(self):
             ua_string = self.headers.get("USER_AGENT")
             if ua_string is None:
+                return None
+
+            return parse(ua_string)
+
+        @property
+        def browser(self):
+            ua = self.user_agent
+            if ua is None:
                 return "Unknown"
 
-            user_agent = parse(ua_string)
-            return f"{user_agent.browser.family} {user_agent.browser.version_string}"
+            return f"{ua.browser.family} {ua.browser.version_string}"
 
         class Meta:
             db_table = 'drf_api_logs'
