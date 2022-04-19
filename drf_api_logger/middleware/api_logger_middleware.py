@@ -99,7 +99,9 @@ class APILoggerMiddleware:
                 if getattr(response, 'streaming', False):
                     response_body = '** Streaming **'
                 else:
-                    if type(response.content) == bytes:
+                    if hasattr(response, "data"):
+                        response_body = response.data
+                    elif type(response.content) == bytes:
                         response_body = json.loads(response.content.decode())
                     else:
                         response_body = json.loads(response.content)
