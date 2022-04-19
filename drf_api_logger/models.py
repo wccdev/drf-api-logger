@@ -27,11 +27,11 @@ if database_log_enabled():
 
     class APILogsModel(BaseModel):
         api = models.CharField(max_length=1024, help_text='API URL')
-        headers = models.JSONField()
-        body = models.JSONField()
+        headers = models.JSONField(null=True)
+        body = models.JSONField(null=True)
         method = models.CharField(max_length=10, db_index=True)
         client_ip_address = models.CharField(max_length=50)
-        response = models.JSONField()
+        response = models.JSONField(null=True)
         status_code = models.PositiveSmallIntegerField(help_text='Response status code', db_index=True)
         result_code = models.PositiveSmallIntegerField(help_text='Result code', null=True, db_index=True)
         request_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE, help_text="Request User")
