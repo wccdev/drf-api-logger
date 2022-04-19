@@ -1,5 +1,6 @@
 import uuid
 
+import requests
 from django.conf import settings
 from django.db import models
 from django.utils.functional import cached_property
@@ -41,6 +42,46 @@ if database_log_enabled():
 
         def __str__(self):
             return self.api
+
+        @property
+        def ip_location(self):
+            api_url = "https://restapi.amap.com/v3/ip"
+            if self.client_ip_address in ("localhost", "127.0.0.1", "0.0.0.0"):
+                return self.client_ip_address
+
+            amap_key = getattr(settings, "AMAP_WEB_API_KEY", None)
+            if amap_key is None:
+                return self.client_ip_address
+
+            resp = requests.get(api_url, params={"key": amap_key, "ip": self.client_ip_address})
+            data = resp.json()
+            province, city = data["city"], data["province"]
+            if city == "" or province == "":
+                return self.client_ip_address
+
+            if city == province:
+                return f"{self.client_ip_address} {city}"
+
+            return f"{self.client_ip_address} {province}{city}"
+
+        @property
+        def ip_location2(self):
+            api_url = "https://sp1.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php"
+            if self.client_ip_address in ("localhost", "127.0.0.1", "0.0.0.0"):
+                return self.client_ip_address
+
+            params = {
+                "query": self.client_ip_address,
+                "resource_id": 5809,
+                "format": "json",
+            }
+            resp = requests.get(api_url, params=params)
+            try:
+                data = resp.json()
+                location = data["data"][0]["location"]
+                return f"{self.client_ip_address} {location}"
+            except (KeyError, IndexError, TypeError):
+                return self.client_ip_address
 
         @cached_property
         def user_agent(self):

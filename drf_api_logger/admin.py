@@ -84,11 +84,11 @@ if database_log_enabled():
         list_filter = ('added_on', 'result_code', 'method',)
         search_fields = ('request_id', 'body', 'response', 'api',)
         readonly_fields = (
-            'api', 'get_request_user', 'get_user_agent', 'get_execution_time', 'client_ip_address',
+            'api', 'get_request_user', 'get_user_agent', 'get_execution_time', 'ip_location2',
             'get_headers', 'get_body', 'method', 'get_response',
             'result_code', 'added_on_time',
         )
-        exclude = ('added_on', 'request_user', 'execution_time', 'headers', 'response', 'body')
+        exclude = ('added_on', 'request_user', 'execution_time', 'client_ip_address', 'headers', 'response', 'body')
 
         change_list_template = 'charts_change_list.html'
         change_form_template = 'change_form.html'
