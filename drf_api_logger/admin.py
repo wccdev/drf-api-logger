@@ -80,7 +80,7 @@ if database_log_enabled():
 
     class APILogsAdmin(admin.ModelAdmin, ExportCsvMixin):
         list_per_page = 20
-        list_display = ('id', 'api', 'method', 'result_code', 'request_user', 'execution_time', 'added_on_time',)
+        list_display = ('request_id', 'api', 'method', 'result_code', 'request_user', 'execution_time', 'added_on_time',)
         list_filter = ('added_on', 'result_code', 'method',)
         search_fields = ('body', 'response', 'headers', 'api',)
         readonly_fields = (
@@ -132,9 +132,9 @@ if database_log_enabled():
                 filtered_query_set = response.context_data["cl"].queryset
             except:
                 return response
-            analytics_model = filtered_query_set.values('added_on__date').annotate(total=Count('id')).order_by('total')
-            status_code_count_mode = filtered_query_set.values('id').values('result_code').annotate(
-                total=Count('id')).order_by('result_code')
+            analytics_model = filtered_query_set.values('added_on__date').annotate(total=Count('pk')).order_by('total')
+            status_code_count_mode = filtered_query_set.values('pk').values('result_code').annotate(
+                total=Count('pk')).order_by('result_code')
             status_code_count_keys = list()
             status_code_count_values = list()
             for item in status_code_count_mode:

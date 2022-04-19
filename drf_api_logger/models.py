@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 from user_agents import parse
@@ -23,6 +25,7 @@ if database_log_enabled():
 
 
     class APILogsModel(BaseModel):
+        request_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
         api = models.CharField(max_length=1024, help_text='API URL')
         headers = models.JSONField()
         body = models.JSONField()
