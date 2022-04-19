@@ -80,15 +80,15 @@ if database_log_enabled():
 
     class APILogsAdmin(admin.ModelAdmin, ExportCsvMixin):
         list_per_page = 15
-        list_display = ('request_id', 'api', 'method', 'request_user', 'get_execution_time', 'browser', 'result_code', 'added_on_time',)
+        list_display = ('request_id', 'api', 'method', 'get_request_user', 'get_execution_time', 'browser', 'result_code', 'added_on_time',)
         list_filter = ('added_on', 'result_code', 'method',)
         search_fields = ('request_id', 'body', 'response', 'api',)
         readonly_fields = (
-            'api', 'request_user', 'get_user_agent', 'get_execution_time', 'client_ip_address',
+            'api', 'get_request_user', 'get_user_agent', 'get_execution_time', 'client_ip_address',
             'get_headers', 'get_body', 'method', 'get_response',
             'result_code', 'added_on_time',
         )
-        exclude = ('added_on', 'execution_time', 'headers', 'response', 'body')
+        exclude = ('added_on', 'request_user', 'execution_time', 'headers', 'response', 'body')
 
         change_list_template = 'charts_change_list.html'
         change_form_template = 'change_form.html'
@@ -111,6 +111,10 @@ if database_log_enabled():
             localtime = timezone.localtime(obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA))
             return localtime.strftime("%Y-%m-%d %H:%M:%S")
 
+        @admin.display(description="request user")
+        def get_request_user(self, obj):
+            return obj.request_user or ""
+
         @admin.display(description="user agent")
         def get_user_agent(self, obj):
             return str(obj.user_agent)
@@ -126,18 +130,26 @@ if database_log_enabled():
         @admin.display(description="headers")
         def get_headers(self, obj):
             """Function to display pretty version of our data"""
-            return pretty_json(obj.headers)
+            if obj.headers:
+                return pretty_json(obj.headers)
 
-        @admin.display(description="body", empty_value="")
+            return ""
+
+        @admin.display(description="body")
         def get_body(self, obj):
             """Function to display pretty version of our data"""
             if obj.body:
                 return pretty_json(obj.body)
 
+            return ""
+
         @admin.display(description="response")
         def get_response(self, obj):
             """Function to display pretty version of our data"""
-            return pretty_json(obj.response)
+            if obj.response:
+                return pretty_json(obj.response)
+
+            return ""
 
         def changelist_view(self, request, extra_context=None):
             response = super(APILogsAdmin, self).changelist_view(request, extra_context)
