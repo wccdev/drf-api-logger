@@ -79,7 +79,7 @@ if database_log_enabled():
             return queryset
 
     class APILogsAdmin(admin.ModelAdmin, ExportCsvMixin):
-        list_per_page = 20
+        list_per_page = 15
         list_display = ('request_id', 'api', 'method', 'request_user', 'get_execution_time', 'browser', 'result_code', 'added_on_time',)
         list_filter = ('added_on', 'result_code', 'method',)
         search_fields = ('request_id', 'body', 'response', 'api',)
@@ -93,6 +93,7 @@ if database_log_enabled():
         change_list_template = 'charts_change_list.html'
         change_form_template = 'change_form.html'
         date_hierarchy = 'added_on'
+        ordering = ("-added_on",)
         actions = ["retry", "export_as_csv"]
 
         def __init__(self, model, admin_site):
