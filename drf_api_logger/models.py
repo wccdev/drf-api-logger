@@ -46,7 +46,7 @@ if database_log_enabled():
         @property
         def location2(self):
             api_url = "https://restapi.amap.com/v3/ip"
-            if self.client_ip_address in ("localhost", "127.0.0.1", "0.0.0.0"):
+            if self.client_ip_address in ("127.0.0.1", "0.0.0.0"):
                 return self.client_ip_address
 
             amap_key = getattr(settings, "AMAP_WEB_API_KEY", None)
@@ -67,7 +67,7 @@ if database_log_enabled():
         @property
         def location(self):
             api_url = "https://sp1.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php"
-            if self.client_ip_address in ("localhost", "127.0.0.1", "0.0.0.0"):
+            if self.client_ip_address in ("127.0.0.1", "0.0.0.0"):
                 return self.client_ip_address
 
             params = {
@@ -79,6 +79,8 @@ if database_log_enabled():
             try:
                 data = resp.json()
                 location = data["data"][0]["location"]
+                if location == "保留地址":
+                    return self.client_ip_address
                 return f"{self.client_ip_address} {location}"
             except (KeyError, IndexError, TypeError):
                 return self.client_ip_address
