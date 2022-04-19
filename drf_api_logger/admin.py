@@ -80,11 +80,11 @@ if database_log_enabled():
 
     class APILogsAdmin(admin.ModelAdmin, ExportCsvMixin):
         list_per_page = 20
-        list_display = ('request_id', 'api', 'method', 'result_code', 'request_user', 'execution_time', 'added_on_time',)
+        list_display = ('request_id', 'api', 'method', 'request_user', 'browser', 'result_code', 'added_on_time',)
         list_filter = ('added_on', 'result_code', 'method',)
         search_fields = ('body', 'response', 'headers', 'api',)
         readonly_fields = (
-            'api', 'request_user', 'execution_time', 'client_ip_address',
+            'api', 'request_user', 'get_user_agent', 'execution_time', 'client_ip_address',
             'get_headers', 'get_body', 'method', 'get_response',
             'result_code', 'added_on_time',
         )
