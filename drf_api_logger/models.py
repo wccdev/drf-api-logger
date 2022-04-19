@@ -15,7 +15,7 @@ if database_log_enabled():
     class BaseModel(models.Model):
         request_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
-        added_on = models.DateTimeField(index=True)
+        added_on = models.DateTimeField(db_index=True)
 
         def __str__(self):
             return self.request_id
