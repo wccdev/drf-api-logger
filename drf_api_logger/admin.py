@@ -80,15 +80,15 @@ if database_log_enabled():
 
     class APILogsAdmin(admin.ModelAdmin, ExportCsvMixin):
         list_per_page = 20
-        list_display = ('request_id', 'api', 'method', 'request_user', 'browser', 'result_code', 'added_on_time',)
+        list_display = ('request_id', 'api', 'method', 'request_user', 'get_execution_time', 'browser', 'result_code', 'added_on_time',)
         list_filter = ('added_on', 'result_code', 'method',)
-        search_fields = ('body', 'response', 'headers', 'api',)
+        search_fields = ('request_id', 'body', 'response', 'api',)
         readonly_fields = (
-            'api', 'request_user', 'get_user_agent', 'execution_time', 'client_ip_address',
+            'api', 'request_user', 'get_user_agent', 'get_execution_time', 'client_ip_address',
             'get_headers', 'get_body', 'method', 'get_response',
             'result_code', 'added_on_time',
         )
-        exclude = ('added_on', 'headers', 'response', 'body')
+        exclude = ('added_on', 'execution_time', 'headers', 'response', 'body')
 
         change_list_template = 'charts_change_list.html'
         change_form_template = 'change_form.html'
@@ -113,6 +113,14 @@ if database_log_enabled():
         @admin.display(description="user agent")
         def get_user_agent(self, obj):
             return str(obj.user_agent)
+
+        @admin.display(description="execution time")
+        def get_execution_time(self, obj):
+            if obj.execution_time > 1:
+                return f'{obj.execution_time:.2f}s'
+
+            return f'{int(obj.execution_time * 1000)}ms'
+
 
         @admin.display(description="headers")
         def get_headers(self, obj):
