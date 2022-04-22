@@ -5,6 +5,8 @@ from django.conf import settings
 from django.db import models
 from django.utils.functional import cached_property
 from user_agents import parse
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 
 from drf_api_logger.utils import database_log_enabled
 
@@ -81,7 +83,8 @@ if database_log_enabled():
                 location = data["data"][0]["location"]
                 if location == "保留地址":
                     return self.client_ip_address
-                return f"{self.client_ip_address} {location}"
+
+                return mark_safe(f"<p>{self.client_ip_address}</p> {location}")
             except (KeyError, IndexError, TypeError):
                 return self.client_ip_address
 
@@ -97,11 +100,11 @@ if database_log_enabled():
         def browser(self):
             ua = self.user_agent
             if ua is None:
-                return "Unknown"
+                return _("Unknown")
 
             return f"{ua.browser.family} {ua.browser.version_string}"
 
         class Meta:
             db_table = 'drf_api_logs'
-            verbose_name = 'API Log'
-            verbose_name_plural = 'API Logs'
+            verbose_name = _('API Log')
+            verbose_name_plural = _('API Logs')

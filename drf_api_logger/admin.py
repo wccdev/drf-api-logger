@@ -15,7 +15,6 @@ if database_log_enabled():
     from django.utils.translation import gettext_lazy as _
     import csv
 
-
     class ExportCsvMixin:
         def export_as_csv(self, request, queryset):
             meta = self.model._meta
@@ -43,7 +42,9 @@ if database_log_enabled():
             super().__init__(request, params, model, model_admin)
             if hasattr(settings, 'DRF_API_LOGGER_SLOW_API_ABOVE'):
                 if type(settings.DRF_API_LOGGER_SLOW_API_ABOVE) == int:  # Making sure for integer value.
-                    self._DRF_API_LOGGER_SLOW_API_ABOVE = settings.DRF_API_LOGGER_SLOW_API_ABOVE / 1000  # Converting to seconds.
+                    self._DRF_API_LOGGER_SLOW_API_ABOVE = (
+                        settings.DRF_API_LOGGER_SLOW_API_ABOVE / 1000
+                    )  # Converting to seconds.
 
         def lookups(self, request, model_admin):
             """
@@ -78,23 +79,65 @@ if database_log_enabled():
 
             return queryset
 
+
+    @admin.register(APILogsModel)
     class APILogsAdmin(admin.ModelAdmin, ExportCsvMixin):
         list_per_page = 15
-        list_display = ('request_id', 'api', 'method', 'get_request_user', 'get_execution_time', 'browser', 'result_code', 'added_on_time',)
-        list_filter = ('added_on', 'result_code', 'method',)
-        search_fields = ('request_id', 'body', 'response', 'api',)
-        readonly_fields = (
-            'api', 'get_request_user', 'location', 'get_user_agent', 'get_execution_time',
-            'get_headers', 'get_body', 'method', 'get_response',
-            'result_code', 'added_on_time',
+        list_display = (
+            'request_id',
+            'api',
+            'method',
+            'get_request_user',
+            'get_execution_time',
+            'browser',
+            'result_code',
+            'added_on_time',
         )
-        exclude = ('added_on', 'request_user', 'execution_time', 'client_ip_address', 'headers', 'response', 'body')
-
+        list_filter = (
+            'added_on',
+            'result_code',
+            'method',
+        )
+        search_fields = (
+            'request_id',
+            'body',
+            'response',
+            'api',
+        )
         change_list_template = 'charts_change_list.html'
         change_form_template = 'change_form.html'
         date_hierarchy = 'added_on'
         ordering = ("-added_on",)
-        actions = ["retry", "export_as_csv"]
+        actions = ("retry", "export_as_csv")
+        fieldsets = (
+            (
+                "Basic",
+                {
+                    "fields": (
+                        "request_id",
+                        "method",
+                        "result_code",
+                        "get_user_agent",
+                        "location",
+                        "get_execution_time",
+                        "get_request_user",
+                        "added_on_time",
+                    )
+                },
+            ),
+            (
+                "Headers",
+                {"fields": ("get_headers",), 'classes': ('collapse', ),},
+            ),
+            (
+                "Body",
+                {"fields": ("get_body",), 'classes': ('collapse',),},
+            ),
+            (
+                "Response",
+                {"fields": ("get_response",), 'classes': ('collapse-open',),},
+            ),
+        )
 
         def __init__(self, model, admin_site):
             super().__init__(model, admin_site)
@@ -125,7 +168,6 @@ if database_log_enabled():
                 return f'{obj.execution_time:.2f}s'
 
             return f'{int(obj.execution_time * 1000)}ms'
-
 
         @admin.display(description="headers")
         def get_headers(self, obj):
@@ -158,8 +200,12 @@ if database_log_enabled():
             except:
                 return response
             analytics_model = filtered_query_set.values('added_on__date').annotate(total=Count('pk')).order_by('total')
-            status_code_count_mode = filtered_query_set.values('pk').values('result_code').annotate(
-                total=Count('pk')).order_by('result_code')
+            status_code_count_mode = (
+                filtered_query_set.values('pk')
+                .values('result_code')
+                .annotate(total=Count('pk'))
+                .order_by('result_code')
+            )
             status_code_count_keys = list()
             status_code_count_values = list()
             for item in status_code_count_mode:
@@ -168,7 +214,7 @@ if database_log_enabled():
             extra_context = dict(
                 analytics=analytics_model,
                 status_code_count_keys=status_code_count_keys,
-                status_code_count_values=status_code_count_values
+                status_code_count_values=status_code_count_values,
             )
             response.context_data.update(extra_context)
             return response
@@ -202,7 +248,7 @@ if database_log_enabled():
                 self.message_user(
                     request,
                     "You must set 'DRF_API_LOGGER_RETRY_AUTH_TOKEN' in django settings before making a retry request.",
-                    level=messages.ERROR
+                    level=messages.ERROR,
                 )
                 return
 
@@ -219,6 +265,3 @@ if database_log_enabled():
                 data=self.body,
                 format='json',
             )
-
-
-    admin.site.register(APILogsModel, APILogsAdmin)
