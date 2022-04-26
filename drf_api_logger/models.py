@@ -106,5 +106,4 @@ if database_log_enabled():
 
         class Meta:
             db_table = 'drf_api_logs'
-            verbose_name = _('API Log')
-            verbose_name_plural = _('API Logs')
+            verbose_name = verbose_name_plural = '接口日志'
