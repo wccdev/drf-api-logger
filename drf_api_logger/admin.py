@@ -109,6 +109,7 @@ if database_log_enabled():
         date_hierarchy = 'added_on'
         ordering = ("-added_on",)
         actions = ("retry", "export_as_csv")
+        list_select_related = ["request_user"]
         fieldsets = (
             (
                 "Basic",

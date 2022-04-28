@@ -21,7 +21,7 @@ def get_long_desc():
 
 setuptools.setup(
     name="drf_api_logger",
-    version="1.2.13",
+    version="1.2.14",
     author="Vishal Anand",
     author_email="vishalanandl177@gmail.com",
     description="An API Logger for your Django Rest Framework project.",
@@ -31,10 +31,9 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=["djangorestframework>=3.7.4", "bleach>=3.1.5", "user-agents==2.2.0"],
     license='MIT',
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     include_package_data=True,
     classifiers=[
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
