@@ -258,6 +258,11 @@ if database_log_enabled():
                 return
 
             api_log = queryset[0]
+
+            if api_log.method.lower() == "get":
+                self.message_user(request, "Get request is not allowed to retry!", level=messages.WARNING)
+                return
+
             client = APIClient()
             client.force_authenticate(token=settings.DRF_API_LOGGER_RETRY_AUTH_TOKEN)
             client.request(
