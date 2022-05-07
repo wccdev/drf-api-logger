@@ -119,6 +119,7 @@ class APILoggerMiddleware:
                     headers=mask_sensitive_data(headers),
                     body=mask_sensitive_data(request_data),
                     method=method,
+                    content_type=request.content_type,
                     client_ip_address=get_client_ip(request),
                     response=mask_sensitive_data(response_body),
                     status_code=response.status_code,

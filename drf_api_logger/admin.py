@@ -117,6 +117,7 @@ if database_log_enabled():
                     "fields": (
                         "request_id",
                         "method",
+                        "content_type",
                         "result_code",
                         "get_user_agent",
                         "location",
@@ -269,5 +270,5 @@ if database_log_enabled():
                 api_log.method,
                 api_log.api,
                 data=self.body,
-                format='json',
+                content_type=api_log.content_type,
             )
