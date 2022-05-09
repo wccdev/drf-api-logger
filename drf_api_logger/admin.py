@@ -137,7 +137,7 @@ if database_log_enabled():
             ),
             (
                 "Response",
-                {"fields": ("get_response",), 'classes': ('collapse-open',),},
+                {"fields": ("get_response",), 'classes': ('collapse',),},
             ),
         )
 
@@ -153,7 +153,10 @@ if database_log_enabled():
 
         @admin.display(description="added on", ordering='added_on')
         def added_on_time(self, obj):
-            localtime = timezone.localtime(obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA))
+            try:
+                localtime = timezone.localtime(obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA))
+            except ValueError:
+                localtime = obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA)
             return localtime.strftime("%Y-%m-%d %H:%M:%S")
 
         @admin.display(description="request user")
