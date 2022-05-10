@@ -105,7 +105,7 @@ if database_log_enabled():
         change_list_template = 'charts_change_list.html'
         change_form_template = 'change_form.html'
         date_hierarchy = 'added_on'
-        ordering = ("-added_on",)
+        ordering = ("-id",)
         actions = ("retry", "export_as_csv")
         list_select_related = ["request_user"]
         fieldsets = (
