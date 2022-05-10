@@ -87,8 +87,9 @@ class APILoggerMiddleware:
         if not (self.DRF_API_LOGGER_DATABASE or self.DRF_API_LOGGER_SIGNAL):
             return self.get_response(request)
 
-        url_name = resolve(request.path).url_name
-        namespace = resolve(request.path).namespace
+        url_resolve = resolve(request.path)
+        url_name = url_resolve.url_name
+        namespace = url_resolve.namespace
 
         # Always skip Admin panel
         if namespace == "admin":
@@ -185,7 +186,7 @@ class APILoggerMiddleware:
     def _get_request_id(self, request) -> str:  # noqa
         request_id_header = getattr(settings, REQUEST_ID_HEADER_SETTING, None)
 
-        if request_id_header and (request_id := request.META.get(request_id_header)):
+        if request_id_header and (request_id := request.headers.get(request_id_header)):
             return request_id
 
         return _generate_id()

@@ -15,20 +15,9 @@ if database_log_enabled():
     """
     Load models only if DRF_API_LOGGER_DATABASE is True
     """
-    class BaseModel(models.Model):
-        request_id = models.CharField(primary_key=True, max_length=36)
 
-        added_on = models.DateTimeField(db_index=True)
-
-        def __str__(self):
-            return self.request_id
-
-        class Meta:
-            abstract = True
-            ordering = ('-added_on',)
-
-
-    class APILogsModel(BaseModel):
+    class APILogsModel(models.Model):
+        request_id = models.CharField(unique=True, max_length=36)
         api = models.CharField(max_length=1024, help_text='API URL')
         headers = models.JSONField(null=True)
         content_type = models.CharField(max_length=64)
@@ -36,12 +25,18 @@ if database_log_enabled():
         method = models.CharField(max_length=10, db_index=True)
         client_ip_address = models.CharField(max_length=50)
         response = models.JSONField(null=True)
-        status_code = models.PositiveSmallIntegerField(help_text='Response status code', db_index=True)
+        status_code = models.PositiveSmallIntegerField(help_text='Response status code')
         result_code = models.PositiveSmallIntegerField(help_text='Result code', null=True, db_index=True)
         request_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE, help_text="Request User")
         retry_times = models.IntegerField(default=0)
         execution_time = models.DecimalField(decimal_places=5, max_digits=8,
                                              help_text='Server execution time (Not complete response time.)')
+
+        added_on = models.DateTimeField(db_index=True)
+
+        class Meta:
+            db_table = 'drf_api_logs'
+            verbose_name = verbose_name_plural = '接口日志'
 
         def __str__(self):
             return self.api
@@ -105,6 +100,3 @@ if database_log_enabled():
 
             return f"{ua.browser.family} {ua.browser.version_string}"
 
-        class Meta:
-            db_table = 'drf_api_logs'
-            verbose_name = verbose_name_plural = '接口日志'
