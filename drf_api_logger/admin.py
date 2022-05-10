@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.conf import settings
 from django.contrib import admin, messages
-from django.db.models import Count
+from django.db.models import Count, F
 from django.http import HttpResponse
 
 from rest_framework.test import APIClient
@@ -121,6 +121,7 @@ if database_log_enabled():
                         "location",
                         "get_execution_time",
                         "get_request_user",
+                        "retry_times",
                         "added_on_time",
                     )
                 },
@@ -247,29 +248,23 @@ if database_log_enabled():
             """
             Perform retry
             """
-            if not hasattr(settings, "DRF_API_LOGGER_RETRY_AUTH_TOKEN"):
-                self.message_user(
-                    request,
-                    "You must set 'DRF_API_LOGGER_RETRY_AUTH_TOKEN' in django settings before making a retry request.",
-                    level=messages.ERROR,
-                )
-                return
 
             if len(queryset) > 1:
                 self.message_user(request, "You cannot retry in batch!", level=messages.ERROR)
                 return
 
             api_log = queryset[0]
+            client = APIClient(HTTP_USER_AGENT='Django/RetryClient')
 
-            if api_log.method.lower() == "get":
-                self.message_user(request, "Get request is not allowed to retry!", level=messages.WARNING)
-                return
+            if api_log.request_user:
+                client.force_authenticate(user=api_log.request_user)
 
-            client = APIClient()
-            client.force_authenticate(token=settings.DRF_API_LOGGER_RETRY_AUTH_TOKEN)
-            client.request(
-                api_log.method,
+            getattr(client, api_log.method.lower())(
                 api_log.api,
-                data=self.body,
-                content_type=api_log.content_type,
+                data=api_log.body,
+                content_type=api_log.content_type or None,
+                HTTP_X_Request_ID=api_log.request_id,
             )
+            api_log.retry_times = F("retry_times") + 1
+            api_log.save(update_fields=["retry_times"])
+            self.message_user(request, "重试成功, 请查看相同Request ID最新记录!", level=messages.INFO)
