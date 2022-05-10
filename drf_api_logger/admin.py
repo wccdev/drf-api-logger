@@ -100,8 +100,6 @@ if database_log_enabled():
         )
         search_fields = (
             'request_id',
-            'body',
-            'response',
             'api',
         )
         change_list_template = 'charts_change_list.html'
