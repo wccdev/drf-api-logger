@@ -87,8 +87,9 @@ class APILoggerMiddleware:
         if not (self.DRF_API_LOGGER_DATABASE or self.DRF_API_LOGGER_SIGNAL):
             return self.get_response(request)
 
-        url_name = resolve(request.path).url_name
-        namespace = resolve(request.path).namespace
+        url_resolve = resolve(request.path)
+        url_name = url_resolve.url_name
+        namespace = url_resolve.namespace
 
         # Always skip Admin panel
         if namespace == "admin":
