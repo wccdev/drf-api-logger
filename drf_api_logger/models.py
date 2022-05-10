@@ -16,7 +16,7 @@ if database_log_enabled():
     Load models only if DRF_API_LOGGER_DATABASE is True
     """
     class BaseModel(models.Model):
-        request_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+        request_id = models.CharField(primary_key=True, max_length=36)
 
         added_on = models.DateTimeField(db_index=True)
 
