@@ -17,7 +17,7 @@ if database_log_enabled():
     """
 
     class APILogsModel(models.Model):
-        request_id = models.CharField(unique=True, max_length=36)
+        request_id = models.CharField(db_index=True, max_length=36)
         api = models.CharField(max_length=1024, help_text='API URL')
         headers = models.JSONField(null=True)
         content_type = models.CharField(max_length=64)
