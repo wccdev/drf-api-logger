@@ -30,7 +30,7 @@ class APILoggerDetailSerializer(serializers.ModelSerializer):
             "method",
             "headers",
             "content_type",
-            "browser",
+            "user_agent",
             "location",
             "body",
             "cost_time",
