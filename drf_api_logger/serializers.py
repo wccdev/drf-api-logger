@@ -36,8 +36,8 @@ class APILoggerDetailSerializer(serializers.ModelSerializer):
             "cost_time",
             "status_code",
             "result_code",
-            "response",
             "user",
             "retry_times",
             "added_on",
+            "response",
         ]
