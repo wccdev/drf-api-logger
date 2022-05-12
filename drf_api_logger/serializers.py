@@ -4,6 +4,8 @@ from drf_api_logger.models import APILogsModel
 
 
 class APILoggerListSerializer(serializers.ModelSerializer):
+    user_agent = serializers.CharField()
+
     class Meta:
         model = APILogsModel
         fields = [
@@ -21,6 +23,8 @@ class APILoggerListSerializer(serializers.ModelSerializer):
 
 
 class APILoggerDetailSerializer(serializers.ModelSerializer):
+    user_agent = serializers.CharField()
+
     class Meta:
         model = APILogsModel
         fields = [
