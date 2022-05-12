@@ -46,7 +46,7 @@ if database_log_enabled():
             if hasattr(self.request_user, "name") and self.request_user.name:
                 return self.request_user.name
 
-            return getattr(self.request_user, self.request_user.USERNAME_FIELD)
+            return getattr(self.request_user, self.request_user.USERNAME_FIELD, "")
 
         @property
         def location2(self):
