@@ -42,6 +42,13 @@ if database_log_enabled():
             return self.api
 
         @property
+        def user(self):
+            if hasattr(self.request_user, "name") and self.request_user.name:
+                return self.request_user.name
+
+            return getattr(self.request_user, self.request_user.USERNAME_FIELD)
+
+        @property
         def location2(self):
             api_url = "https://restapi.amap.com/v3/ip"
             if self.client_ip_address in ("127.0.0.1", "0.0.0.0"):
