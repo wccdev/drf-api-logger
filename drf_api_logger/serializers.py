@@ -7,12 +7,13 @@ class APILoggerListSerializer(serializers.ModelSerializer):
     class Meta:
         model = APILogsModel
         fields = [
+            "id",
             "request_id",
             "api",
             "method",
             "browser",
             "client_ip_address",
-            "execution_time",
+            "cost_time",
             "result_code",
             "user",
             "added_on",
@@ -23,6 +24,7 @@ class APILoggerDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = APILogsModel
         fields = [
+            "id",
             "request_id",
             "api",
             "method",
@@ -31,7 +33,7 @@ class APILoggerDetailSerializer(serializers.ModelSerializer):
             "browser",
             "location",
             "body",
-            "execution_time",
+            "cost_time",
             "status_code",
             "result_code",
             "response",

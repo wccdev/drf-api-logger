@@ -49,6 +49,13 @@ if database_log_enabled():
             return getattr(self.request_user, self.request_user.USERNAME_FIELD, "")
 
         @property
+        def cost_time(self):
+            if self.execution_time > 1:
+                return f'{self.execution_time:.2f}s'
+
+            return f'{int(self.execution_time * 1000)}ms'
+
+        @property
         def location2(self):
             api_url = "https://restapi.amap.com/v3/ip"
             if self.client_ip_address in ("127.0.0.1", "0.0.0.0"):
