@@ -1,5 +1,5 @@
 # DRF API Logger
-![version](https://img.shields.io/badge/version-1.1.10-blue.svg)
+![version](https://img.shields.io/badge/version-1.1.11-blue.svg)
 [![Downloads](https://static.pepy.tech/personalized-badge/drf-api-logger?period=total&units=none&left_color=black&right_color=orange&left_text=Downloads%20Total)](http://pepy.tech/project/drf-api-logger)
 [![Downloads](https://static.pepy.tech/personalized-badge/drf-api-logger?period=month&units=none&left_color=black&right_color=orange&left_text=Downloads%20Last%20Month)](https://pepy.tech/project/drf-api-logger)
 [![Downloads](https://static.pepy.tech/personalized-badge/drf-api-logger?period=week&units=none&left_color=black&right_color=orange&left_text=Downloads%20Last%20Week)](https://pepy.tech/project/drf-api-logger)
@@ -188,6 +188,12 @@ DRF_API_LOGGER_SLOW_API_ABOVE = 200  # Default to None
 You can log only selected methods by specifying `DRF_API_LOGGER_METHODS` in settings.py.
 ```python
 DRF_API_LOGGER_METHODS = ['GET', 'POST', 'DELETE', 'PUT']  # Default to empty list (Log all the requests).
+```
+
+### Want to log only selected response status codes? (Optional)
+You can log only selected responses by specifying `DRF_API_LOGGER_STATUS_CODES` in settings.py.
+```python
+DRF_API_LOGGER_STATUS_CODES = ['200', '400', '404', '500']  # Default to empty list (Log all responses).
 ```
 
 ### Want to see the API information in local timezone? (Optional)

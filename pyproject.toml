@@ -1,5 +1,75 @@
-[build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
+[tool.commitizen]
+version = "1.4.0"
+changelog_start_rev = "0.7.0"
+tag_format = "v$major.$minor.$patch$prerelease"
+version_files = [
+    "pyproject.toml:version",
+    "drf_api_logger/__init__.py"
 ]
+
+[tool.poetry]
+name = "drf-api-logger"
+version = "1.4.0"
+description = "An API Logger for your Django Rest Framework project."
+authors = ["Aiden Lu <allaher@icloud.com>"]
+readme = "README.md"
+keywords = ["api_logger", "django"]
+packages = [
+    { include = "drf_api_logger" },
+]
+homepage = "https://github.com/aiden520/DRF-API-Logger"
+repository = "https://github.com/aiden520/DRF-API-Logger"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Environment :: Web Environment",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+license = "MIT"
+include = [
+    "LICENSE",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+django = ">=3.1"
+djangorestframework = ">=3.7.4"
+bleach = ">=3.1.5"
+user-agents = ">=2.2.0"
+pygments = ">=2.11.2"
+requests = ">=2.27.1"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^4.0.1"
+pytest = "^6.2.5"
+
+[tool.black]
+line-length = 89
+target-version = ['py38', 'py39']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+
+  # The following are specific to Black, you probably don't want those.
+  | blib2to3
+  | tests/data
+  | profiling
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

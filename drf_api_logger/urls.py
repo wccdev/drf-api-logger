@@ -4,5 +4,5 @@ from .views import APILoggerViewSet
 
 router = SimpleRouter()
 
-router.register("apilogs", APILoggerViewSet, basename='apilogs')
+router.register("apilogs", APILoggerViewSet, basename="apilogs")
 urlpatterns = router.urls

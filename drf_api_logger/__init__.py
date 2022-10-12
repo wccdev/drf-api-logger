@@ -1,4 +1,5 @@
 import os
+
 from drf_api_logger.events import Events
 
 try:

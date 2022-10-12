@@ -9,10 +9,10 @@ from django.utils import timezone
 from drf_api_logger import API_LOGGER_SIGNAL, REQUEST_ID_HEADER_SETTING, local
 from drf_api_logger.start_logger_when_server_starts import LOGGER_THREAD
 from drf_api_logger.utils import (
-    get_headers,
     get_client_ip,
-    mask_sensitive_data,
+    get_headers,
     get_result_code,
+    mask_sensitive_data,
 )
 
 """
@@ -53,9 +53,7 @@ class APILoggerMiddleware:
                 type(settings.DRF_API_LOGGER_SKIP_URL_NAME) is tuple
                 or type(settings.DRF_API_LOGGER_SKIP_URL_NAME) is list
             ):
-                self.DRF_API_LOGGER_SKIP_URL_NAME = (
-                    settings.DRF_API_LOGGER_SKIP_URL_NAME
-                )
+                self.DRF_API_LOGGER_SKIP_URL_NAME = settings.DRF_API_LOGGER_SKIP_URL_NAME
 
         self.DRF_API_LOGGER_SKIP_NAMESPACE = []
         if hasattr(settings, "DRF_API_LOGGER_SKIP_NAMESPACE"):
@@ -75,11 +73,17 @@ class APILoggerMiddleware:
             ):
                 self.DRF_API_LOGGER_METHODS = settings.DRF_API_LOGGER_METHODS
 
+        self.DRF_API_LOGGER_STATUS_CODES = []
+        if hasattr(settings, "DRF_API_LOGGER_STATUS_CODES"):
+            if (
+                type(settings.DRF_API_LOGGER_STATUS_CODES) is tuple
+                or type(settings.DRF_API_LOGGER_STATUS_CODES) is list
+            ):
+                self.DRF_API_LOGGER_STATUS_CODES = settings.DRF_API_LOGGER_STATUS_CODES
+
         self.DRF_API_LOGGER_RESULT_CODE_KEY = "ret"
         if hasattr(settings, "DRF_API_LOGGER_RESULT_CODE_KEY"):
-            self.DRF_API_LOGGER_RESULT_CODE_KEY = (
-                settings.DRF_API_LOGGER_RESULT_CODE_KEY
-            )
+            self.DRF_API_LOGGER_RESULT_CODE_KEY = settings.DRF_API_LOGGER_RESULT_CODE_KEY
 
     def __call__(self, request):
 
@@ -87,12 +91,11 @@ class APILoggerMiddleware:
         if not (self.DRF_API_LOGGER_DATABASE or self.DRF_API_LOGGER_SIGNAL):
             return self.get_response(request)
 
-        url_resolve = resolve(request.path)
-        url_name = url_resolve.url_name
-        namespace = url_resolve.namespace
+        url_name = resolve(request.path_info).url_name
+        namespace = resolve(request.path_info).namespace
 
         # Always skip Admin panel
-        if namespace == "admin":
+        if namespace in settings.ADMIN_URL:
             return self.get_response(request)
 
         # Skip for url name
@@ -111,26 +114,34 @@ class APILoggerMiddleware:
             return self.get_response(request)
 
         start_time = time.time()
-        headers = get_headers(request=request)
-        request_data = None
+        request_data = ""
         try:
-            request_data = json.loads(request.body)
+            request_data = json.loads(request.body) if request.body else ""
         except json.JSONDecodeError:
             pass
 
-        # Code to be executed for each request before
-        # the view (and later middleware) are called.
+        headers = get_headers(request=request)
         request_id = self._get_request_id(request)
         local.request_id = request_id
         request.id = request_id
 
+        # Code to be executed for each request before
+        # the view (and later middleware) are called.
         response = self.get_response(request)
+
         # Code to be executed for each request/response after
         # the view is called.
         try:
             del local.request_id
         except AttributeError:
             pass
+
+        # Only log required status codes if matching
+        if (
+            self.DRF_API_LOGGER_STATUS_CODES
+            and response.status_code not in self.DRF_API_LOGGER_STATUS_CODES
+        ):
+            return response
 
         if response.get("content-type") not in (
             "application/json",
@@ -148,6 +159,7 @@ class APILoggerMiddleware:
                 response_body = json.loads(response.content.decode())
             else:
                 response_body = json.loads(response.content)
+
         if self.DRF_API_LOGGER_PATH_TYPE == "ABSOLUTE":
             api = request.build_absolute_uri()
         elif self.DRF_API_LOGGER_PATH_TYPE == "FULL_PATH":
@@ -175,9 +187,9 @@ class APILoggerMiddleware:
             execution_time=time.time() - start_time,
             added_on=timezone.now(),
         )
-        if self.DRF_API_LOGGER_DATABASE:
-            if LOGGER_THREAD:
-                LOGGER_THREAD.put_log_data(data=data)
+
+        if self.DRF_API_LOGGER_DATABASE and LOGGER_THREAD:
+            LOGGER_THREAD.put_log_data(data=data)
         if self.DRF_API_LOGGER_SIGNAL:
             API_LOGGER_SIGNAL.listen(**data)
 

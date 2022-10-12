@@ -4,12 +4,11 @@ import requests
 from django.conf import settings
 from django.db import models
 from django.utils.functional import cached_property
-from user_agents import parse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+from user_agents import parse
 
 from drf_api_logger.utils import database_log_enabled
-
 
 if database_log_enabled():
     """
@@ -18,25 +17,35 @@ if database_log_enabled():
 
     class APILogsModel(models.Model):
         request_id = models.CharField(db_index=True, max_length=36)
-        api = models.CharField(max_length=1024, help_text='API URL')
+        api = models.CharField(max_length=1024, help_text="API URL")
         headers = models.JSONField(null=True)
         content_type = models.CharField(max_length=64)
         body = models.JSONField(null=True)
         method = models.CharField(max_length=10, db_index=True)
         client_ip_address = models.CharField(max_length=50)
         response = models.JSONField(null=True)
-        status_code = models.PositiveSmallIntegerField(help_text='Response status code')
-        result_code = models.PositiveSmallIntegerField(help_text='Result code', null=True, db_index=True)
-        request_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE, help_text="Request User")
+        status_code = models.PositiveSmallIntegerField(help_text="Response status code")
+        result_code = models.PositiveSmallIntegerField(
+            help_text="Result code", null=True, db_index=True
+        )
+        request_user = models.ForeignKey(
+            settings.AUTH_USER_MODEL,
+            null=True,
+            on_delete=models.CASCADE,
+            help_text="Request User",
+        )
         retry_times = models.IntegerField(default=0)
-        execution_time = models.DecimalField(decimal_places=5, max_digits=8,
-                                             help_text='Server execution time (Not complete response time.)')
+        execution_time = models.DecimalField(
+            decimal_places=5,
+            max_digits=8,
+            help_text="Server execution time (Not complete response time.)",
+        )
 
         added_on = models.DateTimeField(db_index=True)
 
         class Meta:
-            db_table = 'drf_api_logs'
-            verbose_name = verbose_name_plural = '接口日志'
+            db_table = "drf_api_logs"
+            verbose_name = verbose_name_plural = "接口日志"
 
         def __str__(self):
             return self.api
@@ -51,9 +60,9 @@ if database_log_enabled():
         @property
         def cost_time(self):
             if self.execution_time > 1:
-                return f'{self.execution_time:.2f}s'
+                return f"{self.execution_time:.2f}s"
 
-            return f'{int(self.execution_time * 1000)}ms'
+            return f"{int(self.execution_time * 1000)}ms"
 
         @property
         def location2(self):
@@ -65,7 +74,9 @@ if database_log_enabled():
             if amap_key is None:
                 return self.client_ip_address
 
-            resp = requests.get(api_url, params={"key": amap_key, "ip": self.client_ip_address})
+            resp = requests.get(
+                api_url, params={"key": amap_key, "ip": self.client_ip_address}
+            )
             data = resp.json()
             province, city = data["city"], data["province"]
             if city == "" or province == "":
@@ -113,4 +124,3 @@ if database_log_enabled():
                 return _("Unknown")
 
             return f"{ua.browser.family} {ua.browser.version_string}"
-

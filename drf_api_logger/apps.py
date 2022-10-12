@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class LoggerConfig(AppConfig):
-    name = 'drf_api_logger'
-    verbose_name = '日志'
+    name = "drf_api_logger"
+    verbose_name = "日志"
