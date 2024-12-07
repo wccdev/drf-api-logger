@@ -92,4 +92,4 @@ def get_result_code(data):
     if type(data) is not dict:
         return None
     
-    return data.get(getattr(settings.DRF_API_LOGGER_RESULT_CODE_KEY, "ret"))
+    return data.get(getattr(settings, "DRF_API_LOGGER_RESULT_CODE_KEY", "ret"))

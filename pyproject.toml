@@ -1,6 +1,6 @@
 [project]
 name = "drf-api-logger"
-version = "1.6.17"
+version = "1.6.18"
 description = "An API Logger for your Django Rest Framework project."
 readme = "README.md"
 requires-python = ">=3.9"
