@@ -10,7 +10,7 @@ from django.urls import resolve
 from django.utils import timezone
 
 from drf_api_logger import API_LOGGER_SIGNAL
-from drf_api_logger.start_logger_when_server_starts import LOGGER_THREAD
+from drf_api_logger.logger_thread_manager import get_logger_thread
 from drf_api_logger.utils import get_headers, get_client_ip, get_request_user, get_result_code, mask_sensitive_data
 
 
@@ -209,6 +209,8 @@ class APILoggerMiddleware:
                     result_code=get_result_code(response_body),
                     tracing_id=tracing_id,
                 )
+                # 在需要时获取 LOGGER_THREAD
+                LOGGER_THREAD = get_logger_thread()
                 if self.DRF_API_LOGGER_DATABASE and LOGGER_THREAD:
                     d = data.copy()
                     d['headers'] = ujson.dumps(d['headers'], indent=4, ensure_ascii=False) if d.get('headers') else ''
