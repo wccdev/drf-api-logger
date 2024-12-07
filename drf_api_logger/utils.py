@@ -30,7 +30,7 @@ def get_client_ip(request):
 
 
 def is_api_logger_enabled():
-    drf_api_logger_database = False
+    drf_api_logger_database = True
     if hasattr(settings, 'DRF_API_LOGGER_DATABASE'):
         drf_api_logger_database = settings.DRF_API_LOGGER_DATABASE
 
@@ -41,7 +41,7 @@ def is_api_logger_enabled():
 
 
 def database_log_enabled():
-    drf_api_logger_database = False
+    drf_api_logger_database = True
     if hasattr(settings, 'DRF_API_LOGGER_DATABASE'):
         drf_api_logger_database = settings.DRF_API_LOGGER_DATABASE
     return drf_api_logger_database
@@ -76,3 +76,20 @@ def mask_sensitive_data(data, mask_api_parameters=False):
             data[key] = [mask_sensitive_data(item) for item in data[key]]
 
     return data
+
+
+def get_request_user(request):
+    """
+    Return request user or None(for AnonymousUser)
+    """
+    if request.user.is_authenticated:
+       return request.user
+    
+    return None
+
+
+def get_result_code(data):
+    if type(data) is not dict:
+        return None
+    
+    return data.get(getattr(settings.DRF_API_LOGGER_RESULT_CODE_KEY, "ret"))

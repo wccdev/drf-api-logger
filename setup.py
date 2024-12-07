@@ -21,13 +21,13 @@ def get_long_desc():
 
 setuptools.setup(
     name="drf-api-logger",
-    version="1.1.16",
+    version="1.6.16",
     author="Vishal Anand",
     author_email="vishalanandl177@gmail.com",
     description="An API Logger for your Django Rest Framework project.",
     long_description=get_long_desc(),
     long_description_content_type="text/markdown",
-    url="https://github.com/vishalanandl177/DRF-API-Logger",
+    url="https://github.com/anyidea/DRF-API-Logger",
     packages=setuptools.find_packages(),
     install_requires=["djangorestframework>=3.7.4", "bleach>=3.1.5"],
     license="Apache 2.0",

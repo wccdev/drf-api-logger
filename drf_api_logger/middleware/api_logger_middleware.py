@@ -1,5 +1,5 @@
 import importlib
-import json
+import ujson
 import sys
 import time
 import uuid
@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from drf_api_logger import API_LOGGER_SIGNAL
 from drf_api_logger.start_logger_when_server_starts import LOGGER_THREAD
-from drf_api_logger.utils import get_headers, get_client_ip, mask_sensitive_data
+from drf_api_logger.utils import get_headers, get_client_ip, get_request_user, get_result_code, mask_sensitive_data
 
 
 class APILoggerMiddleware:
@@ -19,7 +19,7 @@ class APILoggerMiddleware:
         self.get_response = get_response
         # One-time configuration and initialization.
 
-        self.DRF_API_LOGGER_DATABASE = False
+        self.DRF_API_LOGGER_DATABASE = True
         if hasattr(settings, 'DRF_API_LOGGER_DATABASE'):
             self.DRF_API_LOGGER_DATABASE = settings.DRF_API_LOGGER_DATABASE
 
@@ -118,7 +118,7 @@ class APILoggerMiddleware:
 
             request_data = ''
             try:
-                request_data = json.loads(request.body) if request.body else ''
+                request_data = ujson.loads(request.body) if request.body else ''
                 if self.DRF_API_LOGGER_MAX_REQUEST_BODY_SIZE > -1:
                     if sys.getsizeof(request_data) > self.DRF_API_LOGGER_MAX_REQUEST_BODY_SIZE:
                         """
@@ -180,9 +180,9 @@ class APILoggerMiddleware:
 
                 else:
                     if type(response.content) is bytes:
-                        response_body = json.loads(response.content.decode())
+                        response_body = ujson.loads(response.content.decode())
                     else:
-                        response_body = json.loads(response.content)
+                        response_body = ujson.loads(response.content)
                 if self.DRF_API_LOGGER_MAX_RESPONSE_BODY_SIZE > -1:
                     if sys.getsizeof(response_body) > self.DRF_API_LOGGER_MAX_RESPONSE_BODY_SIZE:
                         response_body = ''
@@ -204,14 +204,17 @@ class APILoggerMiddleware:
                     response=mask_sensitive_data(response_body),
                     status_code=response.status_code,
                     execution_time=time.time() - start_time,
-                    added_on=timezone.now()
+                    added_on=timezone.now(),
+                    request_user=get_request_user(request),
+                    result_code=get_result_code(response_body),
+                    tracing_id=tracing_id,
                 )
                 if self.DRF_API_LOGGER_DATABASE and LOGGER_THREAD:
                     d = data.copy()
-                    d['headers'] = json.dumps(d['headers'], indent=4, ensure_ascii=False) if d.get('headers') else ''
+                    d['headers'] = ujson.dumps(d['headers'], indent=4, ensure_ascii=False) if d.get('headers') else ''
                     if request_data:
-                        d['body'] = json.dumps(d['body'], indent=4, ensure_ascii=False) if d.get('body') else ''
-                    d['response'] = json.dumps(d['response'], indent=4, ensure_ascii=False) if d.get('response') else ''
+                        d['body'] = ujson.dumps(d['body'], indent=4, ensure_ascii=False) if d.get('body') else ''
+                    d['response'] = ujson.dumps(d['response'], indent=4, ensure_ascii=False) if d.get('response') else ''
                     LOGGER_THREAD.put_log_data(data=d)
                 if self.DRF_API_LOGGER_SIGNAL:
                     if tracing_id:

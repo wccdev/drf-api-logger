@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 from drf_api_logger.utils import database_log_enabled
 
@@ -30,6 +31,10 @@ if database_log_enabled():
         status_code = models.PositiveSmallIntegerField(help_text='Response status code', db_index=True)
         execution_time = models.DecimalField(decimal_places=5, max_digits=8,
                                              help_text='Server execution time (Not complete response time.)')
+        tracing_id = models.UUIDField(null=True, blank=True, help_text='Tracing request', db_index=True)
+        request_user = models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True, blank=True, db_constraint=False, on_delete=models.DO_NOTHING)
+        result_code = models.PositiveSmallIntegerField(help_text='API result code', null=True, blank=True, db_index=True)
+        retry_times = models.IntegerField(default=0)
 
         def __str__(self):
             return self.api
