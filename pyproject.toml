@@ -3,7 +3,7 @@ name = "drf-api-logger"
 version = "1.6.16"
 description = "An API Logger for your Django Rest Framework project."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.9"
 dependencies = [
     "djangorestframework>=3.7.4",
     "bleach>=3.1.5",
