@@ -1,9 +1,8 @@
-from datetime import timedelta
-
 from django.conf import settings
 from django.contrib import admin, messages
 from django.db.models import Count, F
 from django.http import HttpResponse
+from django.utils.html import format_html
 from rest_framework.test import APIClient
 
 from drf_api_logger.utils import database_log_enabled
@@ -90,24 +89,36 @@ if database_log_enabled():
                 if isinstance(settings.DRF_API_LOGGER_TIMEDELTA, int):  # Making sure for integer value.
                     self._DRF_API_LOGGER_TIMEDELTA = settings.DRF_API_LOGGER_TIMEDELTA
 
-        def added_on_time(self, obj):
-            return (obj.added_on + timedelta(minutes=self._DRF_API_LOGGER_TIMEDELTA)).strftime("%d %b %Y %H:%M:%S")
+        @admin.display(description="Execution time", ordering="execution_time")
+        def get_execution_time(self, obj):
+            if obj.execution_time < 1.0:
+                return f"{int(obj.execution_time * 1000)}ms"
 
-        added_on_time.admin_order_field = 'added_on'
-        added_on_time.short_description = 'Added on'
+            return f"{obj.execution_time:.2f}s"
+
+        @admin.display(description="Headers")
+        def get_headers(self, obj):
+            return format_html('<pre>{}</pre>', obj.headers)
+
+        @admin.display(description="Body")
+        def get_body(self, obj):
+            return format_html('<pre>{}</pre>', obj.body)
+
+        @admin.display(description="Response")
+        def get_response(self, obj):
+            return format_html('<pre>{}</pre>', obj.response)
 
         list_per_page = 20
         ordering = ("-id",)
-        list_display = ('id', 'api', 'method', 'result_code', 'execution_time', 'added_on_time',)
+        list_display = ('id', 'api', 'method', 'result_code', 'get_execution_time', 'added_on',)
         list_filter = ('added_on', 'result_code', 'method',)
         search_fields = ('body', 'response', 'headers', 'api', 'tracing_id')
         readonly_fields = (
-            'execution_time', 'client_ip_address', 'api',
-            'headers', 'body', 'method', 'response', 'status_code', 'added_on_time',
+            'get_execution_time', 'client_ip_address', 'api',
+            'get_headers', 'get_body', 'method', 'get_response', 'status_code', 'added_on',
             'request_user', 'tracing_id', 'result_code',
         )
-        exclude = ('added_on',)
-
+        fields = readonly_fields
         change_list_template = 'charts_change_list.html'
         change_form_template = 'change_form.html'
         date_hierarchy = 'added_on'
@@ -154,7 +165,7 @@ if database_log_enabled():
 
         def has_change_permission(self, request, obj=None):
             return False
-        
+
         def retry(self, request, queryset):
             """
             Perform retry
