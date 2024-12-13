@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.contrib import admin, messages
-from django.db.models import Count, F
+from django.db.models import Count, F, TextField
+from django.forms import Textarea
 from django.http import HttpResponse
-from django.utils.html import format_html
+from django.utils.html import escape, format_html
+from django.templatetags.static import static
 from rest_framework.test import APIClient
 
 from drf_api_logger.utils import database_log_enabled
@@ -77,7 +79,7 @@ if database_log_enabled():
 
     class APILogsAdmin(admin.ModelAdmin, ExportCsvMixin):
 
-        actions = ["export_as_csv"]
+        actions = ["export_as_csv", "retry"]
 
         def __init__(self, model, admin_site):
             super().__init__(model, admin_site)
@@ -97,16 +99,56 @@ if database_log_enabled():
             return f"{obj.execution_time:.2f}s"
 
         @admin.display(description="Headers")
-        def get_headers(self, obj):
-            return format_html('<pre>{}</pre>', obj.headers)
+        def get_headers_with_copy(self, obj):
+            content = escape(obj.headers)
+            icon_url = static('drf_api_logger/img/copy-icon.svg')
+            return format_html('''
+                <div class="flex-container">
+                    <div class="field-label">
+                        <button type="button" class="copy-button" title="复制" aria-label="复制">
+                            <img src="{}" alt="复制" class="copy-icon">
+                            <span class="tooltip-text">复制</span>  <!-- 添加气泡框元素 -->
+                        </button>
+                    </div>
+                    <div class="readonly"><pre>{}</pre></div>
+                </div>
+            ''', icon_url, content)
 
         @admin.display(description="Body")
-        def get_body(self, obj):
-            return format_html('<pre>{}</pre>', obj.body)
+        def get_body_with_copy(self, obj):
+            content = escape(obj.body)
+            icon_url = static('drf_api_logger/img/copy-icon.svg')
+            return format_html('''
+                <div class="flex-container">
+                    <button type="button" class="copy-button" title="复制" aria-label="复制">
+                        <img src="{}" alt="复制" class="copy-icon">
+                        <span class="tooltip-text">复制</span>  <!-- 添加气泡框元素 -->
+                    </button>
+                    <div class="readonly"><pre>{}</pre></div>
+                </div>
+            ''', icon_url, content)
 
         @admin.display(description="Response")
-        def get_response(self, obj):
-            return format_html('<pre>{}</pre>', obj.response)
+        def get_response_with_copy(self, obj):
+            content = escape(obj.response)
+            icon_url = static('drf_api_logger/img/copy-icon.svg')
+            return format_html('''
+                <div class="flex-container">
+                    <div class="field-label">
+                        <button type="button" class="copy-button" title="复制" aria-label="复制">
+                            <img src="{}" alt="复制" class="copy-icon">
+                            <span class="tooltip-text">复制</span>  <!-- 添加气泡框元素 -->
+                        </button>
+                    </div>
+                    <div class="readonly"><pre>{}</pre></div>
+                </div>
+            ''', icon_url, content)
+
+        class Media:
+            js = ('drf_api_logger/js/copy-buttons.js',)
+            css = {
+                'all': ('drf_api_logger/css/copy-buttons.css',)
+            }
 
         list_per_page = 20
         ordering = ("-id",)
@@ -115,13 +157,22 @@ if database_log_enabled():
         search_fields = ('body', 'response', 'headers', 'api', 'tracing_id')
         readonly_fields = (
             'get_execution_time', 'client_ip_address', 'api',
-            'get_headers', 'get_body', 'method', 'get_response', 'status_code', 'added_on',
+            'get_headers_with_copy', 'get_body_with_copy', 'method', 'get_response_with_copy', 'status_code', 'added_on',
             'request_user', 'tracing_id', 'result_code',
         )
         fields = readonly_fields
         change_list_template = 'charts_change_list.html'
         change_form_template = 'change_form.html'
         date_hierarchy = 'added_on'
+        formfield_overrides = {
+            TextField: {
+                'widget': Textarea(attrs={
+                    'rows': 40,
+                    'cols': 40,
+                    # 其他自定义属性
+                }),
+            },
+        }
 
         def changelist_view(self, request, extra_context=None):
             response = super(APILogsAdmin, self).changelist_view(request, extra_context)
@@ -187,7 +238,7 @@ if database_log_enabled():
                 api_log.api,
                 data=api_log.body,
                 format="json",
-                HTTP_Tracing_ID=api_log.tracing_id,
+                HTTP_Tracing_ID=str(api_log.tracing_id),
             )
             api_log.retry_times = F("retry_times") + 1
             api_log.save(update_fields=["retry_times"])

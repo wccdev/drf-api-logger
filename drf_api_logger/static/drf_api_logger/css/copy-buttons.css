@@ -1,0 +1,97 @@
+/* 复制按钮样式 */
+.copy-button {
+  position: relative;  /* 为了定位气泡框 */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 5px;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #747778;  /* 默认图标颜色为黑色 */
+  border-radius: 4px;
+}
+
+/* 图标样式 */
+.copy-button .copy-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.copy-button:hover {
+  background-color: #e0e3e3;  /* 悬停时的背景色 */
+}
+
+
+/* 气泡框样式 */
+.copy-button .tooltip-text {
+  visibility: visible;  /* 默认隐藏 */
+  width: auto;
+  background-color: #747474;  /* 半透明黑色背景 */
+  color: #fff;
+  font-weight: 300;
+  text-align: center;
+  padding: 5px 8px;
+  border-radius: 4px;
+  position: absolute;
+  z-index: 10000;  /* 将 z-index 设置为较高的值 */
+  bottom: 125%;  /* 气泡框在按钮上方 */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap;  /* 防止文字换行 */
+}
+
+/* 气泡框的箭头 */
+.copy-button .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;  /* 在气泡框的底部 */
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.7) transparent transparent transparent;
+}
+
+/* 当鼠标悬停时显示气泡框 */
+.copy-button:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* 点击复制后，修改气泡框的样式 */
+.copy-button.copied .tooltip-text {
+  background-color: #28a745;  /* 绿色背景 */
+}
+
+.copy-button.copied .tooltip-text::after {
+  border-color: #28a745 transparent transparent transparent;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+  overflow: visible;  /* 确保 overflow 为 visible */
+}
+
+.field-label label {
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+.flex-container {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  overflow: visible;  /* 确保 overflow 为 visible */
+}
+
+.readonly pre {
+  margin: 0;
+}
