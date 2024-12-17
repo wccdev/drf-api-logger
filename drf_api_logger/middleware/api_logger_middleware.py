@@ -145,6 +145,10 @@ class APILoggerMiddleware:
             # Code to be executed for each request before
             # the view (and later middleware) are called.
             response = self.get_response(request)
+            
+            # Skip cached response
+            if response.get("X-Cache") == "HIT" or response.get("X-Cache-Status") == "HIT":
+                return response
 
             # Only log required status codes if matching
             if self.DRF_API_LOGGER_STATUS_CODES and response.status_code not in self.DRF_API_LOGGER_STATUS_CODES:
