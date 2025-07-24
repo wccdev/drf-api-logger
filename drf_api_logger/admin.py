@@ -3,14 +3,17 @@ from django.contrib import admin, messages
 from django.db.models import Count, F, TextField
 from django.forms import Textarea
 from django.http import HttpResponse
+from django.urls import reverse
 from django.utils.html import escape, format_html
 from django.templatetags.static import static
 from rest_framework.test import APIClient
 
 from drf_api_logger.utils import database_log_enabled
+from .constants import VIEW_REVERSE_BASENAME
 
 if database_log_enabled():
     from drf_api_logger.models import APILogsModel
+    from drf_api_logger.models import APILogsModel2
     from django.utils.translation import gettext_lazy as _
     import csv
 
@@ -247,3 +250,38 @@ if database_log_enabled():
 
 
     admin.site.register(APILogsModel, APILogsAdmin)
+
+
+    class APILogsRebornAdmin(admin.ModelAdmin):
+        change_list_template = "reborn_list.html"
+
+        def get_queryset(self, request):
+            return super().get_queryset(request).none()
+
+        def has_add_permission(self, request, obj=None):
+            return False
+
+        def has_change_permission(self, request, obj=None):
+            return False
+
+        def changelist_view(self, request, extra_context=None):
+            from drf_api_logger.apps import LoggerConfig
+
+            extra_context = extra_context or {}
+            try:
+                base_fetch_api = reverse(f"{LoggerConfig.name}:{VIEW_REVERSE_BASENAME}-list")
+            except:
+                err_msg = """
+                请先在项目urlpatterns中添加drf_api_logger接口, 例如\n
+                urlpatterns = [\n
+                    ...\n
+                    path("api/drf-api-logs/", include("drf_api_logger.urls")),\n
+                    ...\n
+                ]
+                """
+                self.message_user(request, err_msg, level=messages.ERROR)
+                base_fetch_api = ""
+            extra_context["base_fetch_api"] = base_fetch_api
+            return super().changelist_view(request, extra_context=extra_context)
+
+    admin.site.register(APILogsModel2, APILogsRebornAdmin)

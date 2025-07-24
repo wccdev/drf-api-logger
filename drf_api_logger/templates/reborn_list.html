@@ -1,0 +1,321 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+{% load vue3_and_element_plus %}
+
+<!-- Override extrahead to add Chart.js -->
+{% block extrahead %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+{% use_vue3_element_plus %}
+<div id="apiLogView">
+<el-form :inline="true" :model="formData" class="demo-form-inline">
+<el-form-item label="时间" prop="dateList">
+  <el-date-picker
+    v-model="formData.dateList"
+    type="datetimerange"
+    start-placeholder="开始时间"
+    end-placeholder="结束时间"
+    :default-time="defaultTime1"
+    size="small"
+    format="YYYY-MM-DD HH:mm:ss"
+    value-format="YYYY-MM-DD HH:mm:ss"
+    style="width: 300px"
+  ></el-date-picker>
+</el-form-item>
+<el-form-item label="API" prop="api">
+  <el-input
+    v-model="formData.api"
+    placeholder="请输入URL"
+    clearable
+    size="small"
+    style="width: 250px"
+  />
+</el-form-item>
+<el-form-item label="TracingId" prop="tracing_id">
+  <el-input
+    v-model="formData.tracing_id"
+    placeholder="请输入TracingId"
+    clearable
+    style="width: 300px"
+    size="small"
+  />
+</el-form-item>
+<el-form-item>
+  <el-button type="primary" size="small" @click="queryApilogs">查询</el-button>
+  <el-button size="small" @click="resetApilogs">重置</el-button>
+</el-form-item>
+</el-form>
+<el-pagination
+    v-model:current-page="currentPage"
+    v-model:page-size="pageSize"
+    background
+    :page-sizes="[10, 20, 50, 100]"
+    size="small"
+    layout="total, sizes, prev, pager, next"
+    :total="dataCount"
+    @size-change="handleSizeChange"
+    @current-change="handleCurrentChange"
+    ></el-pagination>
+<br>
+<span class="demonstration"></span>
+<el-table
+  :data="tableData"
+  v-loading="tableLoading"
+  style="width: 100%;"
+  size="small"
+>
+<el-table-column prop="id" label="ID" width="80">
+  <template #default="{ row }">
+    <el-link @click="showLogDetail(row.id)" style="color: blue">#{ row.id }</el-link>
+  </template>
+</el-table-column>
+<el-table-column prop="added_on" label="请求时间" width="180"></el-table-column>
+<el-table-column prop="execution_time" label="耗时(s)" width="80"></el-table-column>
+<el-table-column prop="status_code" label="HTTP状态码" width="80"></el-table-column>
+<el-table-column prop="client_ip_address" label="请求方IP" width="120"></el-table-column>
+<el-table-column prop="api" label="URL"></el-table-column>
+<el-table-column prop="method" label="请求方式" width="80"></el-table-column>
+<el-table-column prop="tracing_id" label="TracingId"></el-table-column>
+</el-table>
+
+<el-dialog
+v-model="dialogVisible"
+:title="`接口明细(ID: ${logDetail.id};  TracingId: ${logDetail.tracing_id})`"
+width="900"
+max-height="900"
+@closed="logDetail = {};expandCollapses = [];"
+>
+<el-card>
+  <template #header>
+    <div class="card-header">
+      <span>API #{ logDetail.method }</span>
+    </div>
+  </template>
+  <p>#{ logDetail.api }</p>
+</el-card>
+
+<el-collapse v-model="expandCollapses" @change="expandCollapsesChange" expand-icon-position="left">
+  <el-collapse-item title="请求头" name="requestHeaders">
+    <el-card>
+      <div class="flex-container" style="display: flex;align-items: flex-start;margin-bottom: 10px;overflow: visible;">
+        <div class="readonly" style="margin: 0;width: 95%">
+          <pre v-if="logDetail.headers" style="margin: 0;">#{ logDetail.headers_json||logDetail.headers }</pre>
+          <pre v-else style="margin-left: 50%">无数据</pre>
+        </div>
+        <span>
+          <el-button type="primary" plain @click="copyJsonData(logDetail.headers)" :disabled="!logDetail.headers">
+            <el-icon><svg  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M768 832a128 128 0 0 1-128 128H192A128 128 0 0 1 64 832V384a128 128 0 0 1 128-128v64a64 64 0 0 0-64 64v448a64 64 0 0 0 64 64h448a64 64 0 0 0 64-64z"></path><path fill="currentColor" d="M384 128a64 64 0 0 0-64 64v448a64 64 0 0 0 64 64h448a64 64 0 0 0 64-64V192a64 64 0 0 0-64-64zm0-64h448a128 128 0 0 1 128 128v448a128 128 0 0 1-128 128H384a128 128 0 0 1-128-128V192A128 128 0 0 1 384 64"></path></svg></el-icon>
+          </el-button>
+        </span>
+      </div>
+    </el-card>
+  </el-collapse-item>
+  <el-collapse-item title="请求体" name="requestBody">
+    <el-card>
+      <div class="flex-container" style="display: flex;align-items: flex-start;margin-bottom: 10px;overflow: visible;">
+        <div class="readonly" style="margin: 0;width: 95%">
+          <pre v-if="logDetail.body" style="margin: 0;">#{ logDetail.body_json||logDetail.body }</pre>
+          <pre v-else style="margin-left: 50%">无数据</pre>
+        </div>
+        <span>
+          <el-button type="primary" plain @click="copyJsonData(logDetail.data)" :disabled="!logDetail.data">
+            <el-icon><svg  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M768 832a128 128 0 0 1-128 128H192A128 128 0 0 1 64 832V384a128 128 0 0 1 128-128v64a64 64 0 0 0-64 64v448a64 64 0 0 0 64 64h448a64 64 0 0 0 64-64z"></path><path fill="currentColor" d="M384 128a64 64 0 0 0-64 64v448a64 64 0 0 0 64 64h448a64 64 0 0 0 64-64V192a64 64 0 0 0-64-64zm0-64h448a128 128 0 0 1 128 128v448a128 128 0 0 1-128 128H384a128 128 0 0 1-128-128V192A128 128 0 0 1 384 64"></path></svg></el-icon>
+          </el-button>
+        </span>
+      </div>
+    </el-card>
+  </el-collapse-item>
+  <el-collapse-item title="响应体" name="responseBody">
+    <el-card>
+      <div class="flex-container" style="display: flex;align-items: flex-start;margin-bottom: 10px;overflow: visible;">
+        <div class="readonly" style="margin: 0;width: 95%">
+          <pre v-if="logDetail.response" style="margin: 0;">#{ logDetail.response_json||logDetail.response }</pre>
+          <pre v-else style="margin-left: 50%">无数据</pre>
+        </div>
+        <span>
+          <el-button type="primary" plain @click="copyJsonData(logDetail.response)" :disabled="!logDetail.response">
+            <el-icon><svg  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M768 832a128 128 0 0 1-128 128H192A128 128 0 0 1 64 832V384a128 128 0 0 1 128-128v64a64 64 0 0 0-64 64v448a64 64 0 0 0 64 64h448a64 64 0 0 0 64-64z"></path><path fill="currentColor" d="M384 128a64 64 0 0 0-64 64v448a64 64 0 0 0 64 64h448a64 64 0 0 0 64-64V192a64 64 0 0 0-64-64zm0-64h448a128 128 0 0 1 128 128v448a128 128 0 0 1-128 128H384a128 128 0 0 1-128-128V192A128 128 0 0 1 384 64"></path></svg></el-icon>
+          </el-button>
+        </span>
+      </div>
+    </el-card>
+  </el-collapse-item>
+  <el-collapse-item title="错误信息" name="errorInfo">
+    <template #title="{ isActive }">
+      <div :class="['title-wrapper', { 'is-active': isActive }]" :style="{'color': logDetail.has_error?'red': ''}">
+        错误信息
+      </div>
+    </template>
+    <el-card>
+      <div class="flex-container" style="display: flex;align-items: flex-start;margin-bottom: 10px;overflow: visible;">
+        <div class="readonly" style="margin: 0;width: 95%">
+          <pre v-if="logDetail.has_error" style="margin: 0;">#{ logDetail.errors }</pre>
+          <pre v-else style="margin-left: 50%">无数据</pre>
+        </div>
+        <span>
+          <el-button type="primary" plain @click="copyJsonData(logDetail.errors)" :disabled="!logDetail.errors">
+            <el-icon><svg  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M768 832a128 128 0 0 1-128 128H192A128 128 0 0 1 64 832V384a128 128 0 0 1 128-128v64a64 64 0 0 0-64 64v448a64 64 0 0 0 64 64h448a64 64 0 0 0 64-64z"></path><path fill="currentColor" d="M384 128a64 64 0 0 0-64 64v448a64 64 0 0 0 64 64h448a64 64 0 0 0 64-64V192a64 64 0 0 0-64-64zm0-64h448a128 128 0 0 1 128 128v448a128 128 0 0 1-128 128H384a128 128 0 0 1-128-128V192A128 128 0 0 1 384 64"></path></svg></el-icon>
+          </el-button>
+        </span>
+      </div>
+    </el-card>
+  </el-collapse-item>
+</el-collapse>
+
+<template #footer>
+  <span class="dialog-footer">
+    <el-button @click="closeLogDetail()">关闭</el-button>
+  </span>
+</template>
+</el-dialog>
+</div>
+
+<script setup>
+  const { createApp, ref } = Vue;
+
+  createApp({
+    delimiters: ["#{", "}"],
+    setup() {
+      const fetchLogsApi = "{{ base_fetch_api }}";
+      const tableLoading = ref(false);
+      const tableData = ref([]);
+      const logDetail = ref({});
+      const pageSize = ref(20);
+      const currentPage = ref(1);
+      const dataCount = ref(0);
+      const defaultTime1 = [
+        new Date(2000, 1, 1, 0, 0, 0),
+        new Date(2000, 2, 1, 23, 59, 59),
+      ]
+      const formData = ref({
+        dateList: [],
+        api: "",
+        tracing_id: "",
+      })
+      const dialogVisible = ref(false);
+      const expandCollapses = ref([]);
+      const expandCollapsesChange = (val) => {
+
+      }
+      const getApiLogs = () => {
+        if (!fetchLogsApi) return;
+        const queryParams = {};
+        const dateList = formData.value.dateList || [];
+        if (dateList && dateList.length === 2) {
+          queryParams["added_on_after"] = dateList[0];
+          queryParams["added_on_before"] = dateList[1];
+        }
+        queryParams["api"] = formData.value.api;
+        queryParams["tracing_id"] = formData.value.tracing_id;
+        queryParams.page = currentPage.value;
+        queryParams.page_size = pageSize.value;
+
+        tableLoading.value = true;
+
+        let paramsArray = [];
+        Object.keys(queryParams).forEach(field => {
+          if (queryParams[field]) {
+            paramsArray.push(`${field}=${queryParams[field]}`)
+          }
+        })
+        const urlParams = paramsArray.join("&");
+
+        fetch(`${fetchLogsApi}?${urlParams}`)
+            .then(response => response.json())
+            .then(respData => {
+              tableData.value = respData.data.results;
+              dataCount.value = respData.data.count;
+              tableLoading.value = false;
+            })
+      }
+      const getApiLog = (rowID) => {
+        if (!fetchLogsApi) return;
+        fetch(`${fetchLogsApi}${rowID}/`)
+            .then(response => response.json())
+            .then(respData => {
+              logDetail.value = respData.data;
+              if (logDetail.value.has_error) {
+                expandCollapses.value.push("errorInfo");
+              }
+            })
+      }
+      Vue.onMounted(() => {
+        getApiLogs();
+      })
+      const handleSizeChange = (val) => {
+        currentPage.value = 1;
+        getApiLogs();
+      }
+      const handleCurrentChange = (val) => {
+        getApiLogs();
+      }
+
+      const queryApilogs = () => {
+        currentPage.value = 1;
+        getApiLogs();
+      }
+
+      const resetApilogs = () => {
+        formData.value = {
+          dateList: [],
+          api: "",
+          tracing_id: "",
+        };
+        currentPage.value = 1;
+        getApiLogs();
+      }
+
+      const showLogDetail = (rowId) => {
+        dialogVisible.value = true;
+        getApiLog(rowId);
+      }
+      const closeLogDetail = () => {
+        dialogVisible.value = false;
+      }
+
+      const copyJsonData = (jsonValue) => {
+        const oInput = document.createElement("input");
+        oInput.value = jsonValue;
+        document.body.appendChild(oInput);
+        oInput.select(); // 模拟鼠标选中
+        document.execCommand("Copy");
+        oInput.style.display = "none";
+        ElementPlus.ElMessage({
+          message: "已复制",
+          type: "success",
+        })
+      }
+      return {
+        tableLoading,
+        tableData,
+        pageSize,
+        currentPage,
+        dataCount,
+        handleSizeChange,
+        handleCurrentChange,
+        defaultTime1,
+        formData,
+        queryApilogs,
+        resetApilogs,
+        showLogDetail,
+        closeLogDetail,
+        dialogVisible,
+        logDetail,
+        copyJsonData,
+        expandCollapses,
+        expandCollapsesChange
+      }
+    }
+  }).use(ElementPlus, {
+    locale: ElementPlusLocaleZhCn
+  }).mount('#apiLogView')
+</script>
+<style>
+.my-popover {
+ max-width: 1200px; /* 最大宽度 */
+ word-wrap: break-word; /* 允许长单词换行 */
+}
+</style>
+{% endblock content %}

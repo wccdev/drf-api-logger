@@ -1,0 +1,1 @@
+VIEW_REVERSE_BASENAME = "forAdmin"

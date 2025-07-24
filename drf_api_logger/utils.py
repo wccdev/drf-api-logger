@@ -82,7 +82,7 @@ def get_request_user(request):
     """
     Return request user or None(for AnonymousUser)
     """
-    if request.user.is_authenticated:
+    if getattr(request, "user") and request.user.is_authenticated:
        return request.user
     
     return None

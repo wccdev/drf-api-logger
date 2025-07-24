@@ -43,3 +43,10 @@ if database_log_enabled():
             db_table = 'drf_api_logs'
             verbose_name = 'API Log'
             verbose_name_plural = 'API Logs'
+
+    class APILogsModel2(APILogsModel):
+        class Meta:
+            proxy = True
+            managed = False
+            verbose_name = "API Log2"
+            verbose_name_plural = "API Logs2"
